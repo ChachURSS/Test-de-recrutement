@@ -1,24 +1,155 @@
-﻿<h1 id="tableLabel">Weather forecast</h1>
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { GarageListComponent } from './components/garage-list/garage-list.component';
+import { CarListComponent } from './components/car-list/car-list.component';
+import { GarageService } from './services/garage.service';
+import { CarService } from './services/car.service';
 
-<p>This component demonstrates fetching data from the server.</p>
+@NgModule({
+  declarations: [
+    AppComponent,
+    GarageListComponent,
+    CarListComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule,
+    FormsModule,
+    ReactiveFormsModule
+  ],
+  providers: [GarageService, CarService],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
 
-<p *ngIf="!forecasts"><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationangular">https://aka.ms/jspsintegrationangular</a> for more details.</em></p>
+// Service pour gérer les garages
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-<table *ngIf="forecasts">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let forecast of forecasts">
-            <td>{{ forecast.date }}</td>
-            <td>{{ forecast.temperatureC }}</td>
-            <td>{{ forecast.temperatureF }}</td>
-            <td>{{ forecast.summary }}</td>
-        </tr>
-    </tbody>
-</table>
+@Injectable({ providedIn: 'root' })
+export class GarageService {
+  private apiUrl = 'https://api.example.com/garages';
+
+  constructor(private http: HttpClient) {}
+
+  getGarages(): Observable<any> {
+    return this.http.get(this.apiUrl);
+  }
+
+  addGarage(garage: any): Observable<any> {
+    return this.http.post(this.apiUrl, garage);
+  }
+
+  deleteGarage(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+}
+
+// Service pour gérer les voitures
+@Injectable({ providedIn: 'root' })
+export class CarService {
+  private apiUrl = 'https://api.example.com/cars';
+
+  constructor(private http: HttpClient) {}
+
+  getCars(): Observable<any> {
+    return this.http.get(this.apiUrl);
+  }
+
+  addCar(car: any): Observable<any> {
+    return this.http.post(this.apiUrl, car);
+  }
+
+  deleteCar(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  assignCarToGarage(carId: number, garageId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${carId}/assign/${garageId}`, {});
+  }
+
+  removeCarFromGarage(carId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${carId}/remove`, {});
+  }
+}
+
+// Composant GarageListComponent
+import { Component, OnInit } from '@angular/core';
+import { GarageService } from '../../services/garage.service';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
+@Component({
+  selector: 'app-garage-list',
+  templateUrl: './garage-list.component.html',
+  styleUrls: ['./garage-list.component.scss']
+})
+export class GarageListComponent implements OnInit {
+  garages: any[] = [];
+  garageForm: FormGroup;
+
+  constructor(private garageService: GarageService, private fb: FormBuilder) {
+    this.garageForm = this.fb.group({
+      name: ['']
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadGarages();
+  }
+
+  loadGarages(): void {
+    this.garageService.getGarages().subscribe(data => {
+      this.garages = data;
+    });
+  }
+
+  addGarage(): void {
+    this.garageService.addGarage(this.garageForm.value).subscribe(() => {
+      this.loadGarages();
+    });
+  }
+}
+
+// Composant CarListComponent
+import { Component, OnInit } from '@angular/core';
+import { CarService } from '../../services/car.service';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
+@Component({
+  selector: 'app-car-list',
+  templateUrl: './car-list.component.html',
+  styleUrls: ['./car-list.component.scss']
+})
+export class CarListComponent implements OnInit {
+  cars: any[] = [];
+  carForm: FormGroup;
+
+  constructor(private carService: CarService, private fb: FormBuilder) {
+    this.carForm = this.fb.group({
+      model: [''],
+      garageId: ['']
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadCars();
+  }
+
+  loadCars(): void {
+    this.carService.getCars().subscribe(data => {
+      this.cars = data;
+    });
+  }
+
+  addCar(): void {
+    this.carService.addCar(this.carForm.value).subscribe(() => {
+      this.loadCars();
+    });
+  }
+}
