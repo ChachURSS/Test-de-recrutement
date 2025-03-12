@@ -1,14 +1,23 @@
-﻿:host {
-    max-width: 1280px;
-    padding: 2rem;
-    text-align: center;
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
+h1 {
+  text-align: center;
+  color: #333;
 }
 
-table {
-    margin: 0 auto;
+.section {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+h2 {
+  color: #555;
 }

@@ -1,12 +1,23 @@
+using Microsoft.EntityFrameworkCore;
+using AngularWithASP.Server.Data;
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAngular",
-        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=garage.db"));
 
 var app = builder.Build();
-app.UseCors("AllowAngular");
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
