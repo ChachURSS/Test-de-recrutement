@@ -4,6 +4,7 @@ import { Garage } from '../../models/garage.model';
 
 @Component({
   selector: 'app-garage-list',
+  standalone: false,
   templateUrl: './garage-list.component.html',
   styleUrls: ['./garage-list.component.scss']
 })
