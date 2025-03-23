@@ -31,7 +31,6 @@ namespace AngularWithASP.Server.Models
         /// <summary>
         /// The garage where the car is parked.
         /// </summary>
-        [JsonIgnore]
         public Garage? Garage { get; set; }
         /// <summary>
         /// The color of the car.

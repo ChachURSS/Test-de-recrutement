@@ -14,7 +14,7 @@ const routes: Routes = [
   { path: 'car-edit/:carId', component: CarEditorComponent },
   { path: 'garage-edit', component: GarageEditorComponent },
   { path: 'garage-edit/:garageId', component: GarageEditorComponent },
-  { path: '', redirectTo: '/garages', pathMatch: 'full' }
+  { path: '', redirectTo: '/home', pathMatch: 'full' }
 ];
 
 @NgModule({

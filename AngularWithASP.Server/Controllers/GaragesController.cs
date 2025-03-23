@@ -28,6 +28,8 @@ namespace AngularWithASP.Server.Controllers
             _logger = logger;
         }
 
+
+
         /// <summary>
         /// Retrieves the list of all garages, optionally filtered by name.
         /// </summary>
@@ -173,6 +175,39 @@ namespace AngularWithASP.Server.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
+        }
+        /// <summary>
+        /// Retrieves a garage by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the garage to retrieve.</param>
+        /// <returns>The garage with the specified ID.</returns>
+        [HttpGet("{id}")]
+        [SwaggerOperation(
+            Summary = "Retrieves a garage by its ID.",
+            Description = "Returns the garage with the specified ID."
+        )]
+        [SwaggerResponse(200, "The garage with the specified ID.", typeof(Garage))]
+        [SwaggerResponse(404, "The garage was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<ActionResult<Garage>> GetGarageById(
+            [SwaggerParameter("The ID of the garage to retrieve.")] int id)
+        {
+            try
+            {
+                var garage = await _garageRepository.GetGarageById(id);
+
+                if (garage == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(garage);
             }
             catch (Exception exc)
             {
