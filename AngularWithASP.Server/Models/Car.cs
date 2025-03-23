@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AngularWithASP.Server.Models
 {
@@ -24,10 +26,12 @@ namespace AngularWithASP.Server.Models
         /// <summary>
         /// The ID of the garage where the car is parked.
         /// </summary>
+        [ForeignKey("Garage")]
         public int? GarageId { get; set; }
         /// <summary>
         /// The garage where the car is parked.
         /// </summary>
+        [JsonIgnore]
         public Garage? Garage { get; set; }
         /// <summary>
         /// The color of the car.

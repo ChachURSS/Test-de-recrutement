@@ -11,7 +11,10 @@ import { Router } from '@angular/router';
   imports: [CommonModule]
 })
 export class CarListComponent implements OnInit {
-  cars: Car[] = [];
+    cars: Car[] = [];
+    currentPage: number = 1;
+    totalPages: number = 1;
+    totalPagesArray: number[] = [];
 
   constructor(
     private carService: CarService,
@@ -19,19 +22,34 @@ export class CarListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadCars();
+      this.loadCarsWithPagination();
   }
 
   loadCars(): void {
     this.carService.getCars().subscribe(cars => {
       this.cars = cars;
     });
-  }
+    }
+
+    loadCarsWithPagination(): void {
+        this.carService.getCarsWithPagination(this.currentPage).subscribe(response => {
+            this.cars = response.data;
+            this.totalPages = response.totalPages;
+            //this.totalPagesArray = Array(this.totalPages).fill(0).map((x, i) => i + 1);
+        });
+    }
+
+    changePage(page: number): void {
+        if (page >= 1 && page <= this.totalPages) {
+            this.currentPage = page;
+            this.loadCarsWithPagination();
+        }
+    }
 
     deleteCar(id: number): void {
         if (confirm('Etes vous sur de vouloir supprimer ce véhicule?')) {
             this.carService.deleteCar(id).subscribe(() => {
-                this.loadCars();
+                this.loadCarsWithPagination();
             });
         }
     }

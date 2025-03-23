@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using AngularWithASP.Server.Data;
 using AngularWithASP.Server.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using AngularWithASP.Server.DataAccess;
 
 namespace AngularWithASP.Server.Controllers
 {
@@ -13,20 +14,19 @@ namespace AngularWithASP.Server.Controllers
     [ApiController]
     public class CarsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICarRepository _carRepository;
         private readonly ILogger<CarsController> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CarsController"/> class.
         /// </summary>
-        /// <param name="context">Data context</param>
+        /// <param name="carRepository">Car repository</param>
         /// <param name="logger">Logger object</param>
-        public CarsController(AppDbContext context, ILogger<CarsController> logger)
+        public CarsController(ICarRepository carRepository, ILogger<CarsController> logger)
         {
-            _context = context;
+            _carRepository = carRepository;
             _logger = logger;
         }
-
 
         /// <summary>
         /// Retrieves information for a specific car by its ID.
@@ -45,7 +45,7 @@ namespace AngularWithASP.Server.Controllers
         {
             try
             {
-                var car = await _context.Cars.Include(c => c.Garage).FirstOrDefaultAsync(c => c.Id == id);
+                var car = await _carRepository.GetCarById(id);
                 if (car == null)
                 {
                     return NotFound();
@@ -61,16 +61,18 @@ namespace AngularWithASP.Server.Controllers
         }
 
         /// <summary>
-        /// Retrieves the list of all cars, optionally filtered by garage ID, car brand car model, and car color.
+        /// Retrieves the list of all cars, optionally filtered by garage ID, car brand, car model, and car color, with pagination.
         /// </summary>
         /// <param name="garageId">The ID of the garage to filter cars by.</param>
         /// <param name="brand">The brand to filter cars by.</param>
         /// <param name="model">The model to filter cars by.</param>
         /// <param name="color">The color to filter cars by.</param>
+        /// <param name="page">The page number for pagination.</param>
+        /// <param name="pageSize">The number of items per page.</param>
         /// <returns>A list of cars with their garage information.</returns>
         [HttpGet]
         [SwaggerOperation(
-            Summary = "Retrieves the list of all cars, optionally filtered by garage ID, brand, model, and color.",
+            Summary = "Retrieves the list of all cars, optionally filtered by garage ID, brand, model, and color, with pagination.",
             Description = "Returns a list of cars with their garage information."
         )]
         [SwaggerResponse(200, "The list of cars.", typeof(IEnumerable<Car>))]
@@ -86,38 +88,13 @@ namespace AngularWithASP.Server.Controllers
         {
             try
             {
-                var query = _context.Cars.Include(c => c.Garage).AsQueryable();
+                var cars = await _carRepository.GetCars(garageId, brand, model, color, page, pageSize);
+                var totalItems = await _carRepository.GetTotalCarsCount(garageId, brand, model, color);
 
-                if (garageId.HasValue)
-                {
-                    query = query.Where(c => c.GarageId == garageId.Value);
-                }
-
-                if (!string.IsNullOrEmpty(brand))
-                {
-                    query = query.Where(c => c.Brand.Contains(brand));
-                }
-
-                if (!string.IsNullOrEmpty(model))
-                {
-                    query = query.Where(c => c.Model.Contains(model));
-                }
-
-                if (!string.IsNullOrEmpty(color))
-                {
-                    query = query.Where(c => c.Color.Contains(color));
-                }
-
-                var totalItems = await query.CountAsync();
-                if (totalItems == 0)
+                if (!cars.Any())
                 {
                     return NoContent();
                 }
-
-                var cars = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
 
                 Response.Headers.Add("X-Total-Count", totalItems.ToString());
 
@@ -157,14 +134,13 @@ namespace AngularWithASP.Server.Controllers
 
             try
             {
-                _context.Cars.Add(car);
-                await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetCars), new { id = car.Id }, car);
+                var createdCar = await _carRepository.AddCar(car);
+                return CreatedAtAction(nameof(GetCars), new { id = createdCar.Id }, createdCar);
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, exc.GetFullStack());
-                return StatusCode(500, "An internal error occured, please inform administrator");
+                return StatusCode(500, "An internal error occurred, please inform administrator");
             }
         }
 
@@ -185,22 +161,82 @@ namespace AngularWithASP.Server.Controllers
         {
             try
             {
-                var car = await _context.Cars.FindAsync(id);
-                if (car == null)
+                var deleted = await _carRepository.DeleteCar(id);
+                if (!deleted)
                 {
                     return NotFound();
                 }
 
-                _context.Cars.Remove(car);
-                await _context.SaveChangesAsync();
                 return NoContent();
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, exc.GetFullStack());
-                return StatusCode(500, "An internal error occured, please inform administrator");
+                return StatusCode(500, "An internal error occurred, please inform administrator");
             }
-            
+        }
+
+        /// <summary>
+        /// Assigns a car to a garage.
+        /// </summary>
+        /// <param name="carId">The ID of the car to assign.</param>
+        /// <param name="garageId">The ID of the garage to assign the car to.</param>
+        /// <returns>The updated car.</returns>
+        [HttpPut("{carId}/assign/{garageId}")]
+        [SwaggerOperation(
+            Summary = "Assigns a car to a garage.",
+            Description = "Returns the updated car."
+        )]
+        [SwaggerResponse(200, "The updated car.", typeof(Car))]
+        [SwaggerResponse(404, "The car or garage was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<IActionResult> AssignCarToGarage(int carId, int garageId)
+        {
+            try
+            {
+                var updatedCar = await _carRepository.AssignCarToGarage(carId, garageId);
+                return Ok(updatedCar);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
+        }
+
+        /// <summary>
+        /// Removes a car from its garage.
+        /// </summary>
+        /// <param name="carId">The ID of the car to remove from the garage.</param>
+        /// <returns>The updated car.</returns>
+        [HttpPut("{carId}/remove")]
+        [SwaggerOperation(
+            Summary = "Removes a car from its garage.",
+            Description = "Returns the updated car."
+        )]
+        [SwaggerResponse(200, "The updated car.", typeof(Car))]
+        [SwaggerResponse(404, "The car was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<IActionResult> RemoveCarFromGarage(int carId)
+        {
+            try
+            {
+                var updatedCar = await _carRepository.RemoveCarFromGarage(carId);
+                return Ok(updatedCar);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
         }
 
         /// <summary>
@@ -232,103 +268,17 @@ namespace AngularWithASP.Server.Controllers
 
             try
             {
-                var existingCar = await _context.Cars.FindAsync(id);
-                if (existingCar == null)
-                {
-                    return NotFound();
-                }
-
-                existingCar.Brand = car.Brand;
-                existingCar.Model = car.Model;
-                existingCar.Color = car.Color;
-                existingCar.GarageId = car.GarageId;
-
-                _context.Entry(existingCar).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-
-                return Ok(existingCar);
+                var updatedCar = await _carRepository.UpdateCar(id, car);
+                return Ok(updatedCar);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, exc.GetFullStack());
                 return StatusCode(500, "An internal error occurred, please inform administrator");
-            }
-        }
-
-
-        /// <summary>
-        /// Assigns a car to a garage.
-        /// </summary>
-        /// <param name="carId">The ID of the car to assign.</param>
-        /// <param name="garageId">The ID of the garage to assign the car to.</param>
-        /// <returns>The updated car.</returns>
-        [HttpPut("{carId}/assign/{garageId}")]
-        [SwaggerOperation(
-            Summary = "Assigns a car to a garage.",
-            Description = "Returns the updated car."
-        )]
-        [SwaggerResponse(200, "The updated car.", typeof(Car))]
-        [SwaggerResponse(404, "The car or garage was not found.")]
-        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
-        public async Task<IActionResult> AssignCarToGarage(int carId, int garageId)
-        {
-            try
-            {
-                var car = await _context.Cars.FindAsync(carId);
-                if (car == null)
-                {
-                    return NotFound($"Car {carId} not found");
-                }
-
-                var garage = await _context.Garages.FindAsync(garageId);
-                if (garage == null)
-                {
-                    return NotFound($"Garage {garageId} not found");
-                }
-
-                car.GarageId = garageId;
-                await _context.SaveChangesAsync();
-                return Ok(car);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc, exc.GetFullStack());
-                return StatusCode(500, "An internal error occured, please inform administrator");
-            }
-            
-        }
-
-        /// <summary>
-        /// Removes a car from its garage.
-        /// </summary>
-        /// <param name="carId">The ID of the car to remove from the garage.</param>
-        /// <returns>The updated car.</returns>
-        [HttpPut("{carId}/remove")]
-        [SwaggerOperation(
-            Summary = "Removes a car from its garage.",
-            Description = "Returns the updated car."
-        )]
-        [SwaggerResponse(200, "The updated car.", typeof(Car))]
-        [SwaggerResponse(404, "The car was not found.")]
-        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
-        public async Task<IActionResult> RemoveCarFromGarage(int carId)
-        {
-            try
-            {
-                var car = await _context.Cars.FindAsync(carId);
-                if (car == null)
-                {
-                    return NotFound();
-                }
-
-                car.GarageId = null;
-                await _context.SaveChangesAsync();
-                return Ok(car);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc, exc.GetFullStack());
-                return StatusCode(500, "An internal error occured, please inform administrator");
             }
         }
     }

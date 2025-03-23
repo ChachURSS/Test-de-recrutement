@@ -1,28 +1,45 @@
 <div class="container">
-  <h1>Liste des Voitures</h1>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Marque</th>
-        <th>Modèle</th>
-        <th>Couleur</th>
-        <th>Garage</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let car of cars">
-        <td>{{ car.id }}</td>
-        <td>{{ car.brand }}</td>
-        <td>{{ car.model }}</td>
-        <td>{{ car.color }}</td>
-        <td>{{ car.garage?.name}}</td>
-        <td>
-          <button class="btn btn-primary" (click)="updateCar(car.id)">Modifier</button>
-          <button class="btn btn-danger" (click)="deleteCar(car.id)">Supprimer</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <h1>Liste des Voitures</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Marque</th>
+                <th>Modèle</th>
+                <th>Couleur</th>
+                <th>Garage</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let car of cars">
+                <td>{{ car.id }}</td>
+                <td>{{ car.brand }}</td>
+                <td>{{ car.model }}</td>
+                <td>{{ car.color }}</td>
+                <td>{{ car.garage?.name}}</td>
+                <td>
+                    <button class="btn btn-primary" (click)="updateCar(car.id)">Modifier</button>
+                    <button class="btn btn-danger" (click)="deleteCar(car.id)">Supprimer</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" (click)="changePage(currentPage - 1)" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item" *ngFor="let page of totalPagesArray" [class.active]="page === currentPage">
+                <a class="page-link" (click)="changePage(page)">{{ page }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" (click)="changePage(currentPage + 1)" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>

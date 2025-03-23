@@ -11,10 +11,24 @@
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="#">Home</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" (click)="goToGarageList()" >Gestion des garages</a>
-            <!-- <a class="nav-link" href="garage-list"></a> -->
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Gestion des garages
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" (click)="goToGarageList()">Liste des garages</a></li>
+              <li><a class="dropdown-item" (click)="goToAddGarage()">Ajouter une garage</a></li>
+              <!-- <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" href="#">Something else here</a></li> -->
+            </ul>
           </li>
+
+          <!----li class="nav-item">
+    <a class="nav-link" (click)="goToGarageList()" >Gestion des garages</a>
+     <a class="nav-link" href="garage-list"></a>
+  </li> -->
+
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Gestion des voitures
@@ -23,7 +37,7 @@
               <li><a class="dropdown-item" (click)="goToCarList()">Liste des voitures</a></li>
               <li><a class="dropdown-item" (click)="goToAddCar()">Ajouter une voiture</a></li>
               <!-- <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#">Something else here</a></li> -->
+      <li><a class="dropdown-item" href="#">Something else here</a></li> -->
             </ul>
           </li>
           <li class="nav-item">

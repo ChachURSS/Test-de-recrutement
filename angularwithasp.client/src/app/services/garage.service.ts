@@ -19,6 +19,10 @@ export class GarageService {
     return this.http.get<Garage>(`${this.apiUrl}/${id}`);
   }
 
+  getGarageById(id: number): Observable<Garage> {
+    return this.http.get<Garage>(`${this.apiUrl}/${id}`);
+  }
+
   createGarage(garage: Garage): Observable<Garage> {
     return this.http.post<Garage>(this.apiUrl, garage);
   }

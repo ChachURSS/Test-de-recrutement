@@ -1,1 +1,31 @@
-<p>garage-editor works!</p>
+<div class="container">
+  <h2>{{ garageId ? 'Modification du garage numero ' + garageId : 'Creation d\'un nouveau garage' }}</h2>
+  <form [formGroup]="garageForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="name">Nom</label>
+      <input type="text" id="name" class="form-control" formControlName="name">
+      <div *ngIf="garageForm.get('name')?.invalid && garageForm.get('name')?.touched" class="text-danger">
+        Veuillez entrer un nom.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="location">Localisation</label>
+      <input type="text" id="location" class="form-control" formControlName="location">
+      <div *ngIf="garageForm.get('location')?.invalid && garageForm.get('location')?.touched" class="text-danger">
+        Veuillez entrer une localisation.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="capacity">Capacité</label>
+      <input type="number" id="capacity" class="form-control" formControlName="capacity">
+      <div *ngIf="garageForm.get('capacity')?.invalid && garageForm.get('capacity')?.touched" class="text-danger">
+        Veuillez entrer une capacité.
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="garageForm.invalid">Submit</button>
+    <div *ngIf="errorMessage" class="text-danger mt-2">{{ errorMessage }}</div>
+  </form>
+</div>

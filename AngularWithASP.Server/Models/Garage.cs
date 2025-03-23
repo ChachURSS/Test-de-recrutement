@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AngularWithASP.Server.Models
 {
@@ -19,7 +20,8 @@ namespace AngularWithASP.Server.Models
         /// <summary>
         /// The list of cars parked in the garage.
         /// </summary>
-        public List<Car>? Cars { get; set; }
+        [JsonIgnore]
+        public ICollection<Car>? Cars { get; set; }
         /// <summary>
         /// The address of the garage.
         /// </summary>
