@@ -30,6 +30,7 @@ export class CarEditorComponent implements OnInit {
 
     ngOnInit(): void {
         const carIdParam = this.route.snapshot.paramMap.get('carId');
+        const garageIdParam = this.route.snapshot.paramMap.get('garageId');
         this.carId = carIdParam ? +carIdParam : 0;
         this.carForm = this.fb.group({
             brand: ['', Validators.required],
@@ -51,6 +52,14 @@ export class CarEditorComponent implements OnInit {
         }
 
         this.loadGarages();
+
+        // Check if garageId is provided as an input parameter
+        if (garageIdParam) {
+            // select the garage with this id in the srop down list
+            this.carForm.patchValue({ garageId: garageIdParam });
+            // set the garage id in the car object
+            this.carForm.value.garageId = garageIdParam;
+        }
     }
 
     loadCar(id: number): void {
