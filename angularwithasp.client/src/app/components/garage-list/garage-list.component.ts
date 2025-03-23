@@ -1,17 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { GarageService } from '../../services/garage.service';
 import { Garage } from '../../models/garage.model';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-garage-list',
-  standalone: false,
   templateUrl: './garage-list.component.html',
-  styleUrls: ['./garage-list.component.scss']
+  styleUrls: ['./garage-list.component.scss'],
+  imports: [CommonModule]
 })
 export class GarageListComponent implements OnInit {
   garages: Garage[] = [];
 
-  constructor(private garageService: GarageService) { }
+  constructor(
+    private garageService: GarageService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.loadGarages();
@@ -27,5 +32,9 @@ export class GarageListComponent implements OnInit {
     this.garageService.deleteGarage(id).subscribe(() => {
       this.loadGarages();
     });
+  }
+
+  updateGarage(id: number): void {
+    this.router.navigate(['garage-edit', id]);
   }
 }

@@ -29,9 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\angularwithasp.client\angularwithasp.client.esproj">
+    <ProjectReference Include="..\angularwithasp.client\ancien clientt.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\angularwithasp.client\angularwithasp.client.esproj" />
   </ItemGroup>
 
   <ItemGroup>

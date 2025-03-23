@@ -6,6 +6,8 @@
         <th>ID</th>
         <th>Marque</th>
         <th>Modèle</th>
+        <th>Couleur</th>
+        <th>Garage</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -14,7 +16,10 @@
         <td>{{ car.id }}</td>
         <td>{{ car.brand }}</td>
         <td>{{ car.model }}</td>
+        <td>{{ car.color }}</td>
+        <td>{{ car.garage?.name}}</td>
         <td>
+          <button class="btn btn-primary" (click)="updateCar(car.id)">Modifier</button>
           <button class="btn btn-danger" (click)="deleteCar(car.id)">Supprimer</button>
         </td>
       </tr>

@@ -6,6 +6,7 @@
         <th>ID</th>
         <th>Nom</th>
         <th>Adresse</th>
+        <th>Ville</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -14,7 +15,9 @@
         <td>{{ garage.id }}</td>
         <td>{{ garage.name }}</td>
         <td>{{ garage.address }}</td>
+        <td>{{ garage.city }}</td>
         <td>
+          <button class="btn btn-primary" (click)="updateGarage(garage.id)">Modifier</button>
           <button class="btn btn-danger" (click)="deleteGarage(garage.id)">Supprimer</button>
         </td>
       </tr>

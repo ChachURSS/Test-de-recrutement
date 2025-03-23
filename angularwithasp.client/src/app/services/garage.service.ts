@@ -7,9 +7,9 @@ import { Garage } from '../models/garage.model';
   providedIn: 'root'
 })
 export class GarageService {
-  private apiUrl = 'https://localhost:5001/api/garages';
+  private apiUrl = 'https://localhost:7068/api/garages';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getGarages(): Observable<Garage[]> {
     return this.http.get<Garage[]>(this.apiUrl);

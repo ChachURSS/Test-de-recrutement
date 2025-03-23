@@ -27,6 +27,39 @@ namespace AngularWithASP.Server.Controllers
             _logger = logger;
         }
 
+
+        /// <summary>
+        /// Retrieves information for a specific car by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the car to retrieve.</param>
+        /// <returns>The car information.</returns>
+        [HttpGet("{id}")]
+        [SwaggerOperation(
+            Summary = "Retrieves information for a specific car by its ID.",
+            Description = "Returns the car information."
+        )]
+        [SwaggerResponse(200, "The car information.", typeof(Car))]
+        [SwaggerResponse(404, "The car was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<ActionResult<Car>> GetCarById(int id)
+        {
+            try
+            {
+                var car = await _context.Cars.Include(c => c.Garage).FirstOrDefaultAsync(c => c.Id == id);
+                if (car == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(car);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
+        }
+
         /// <summary>
         /// Retrieves the list of all cars, optionally filtered by garage ID, car brand car model, and car color.
         /// </summary>
@@ -46,8 +79,10 @@ namespace AngularWithASP.Server.Controllers
         public async Task<ActionResult<IEnumerable<Car>>> GetCars(
             [FromQuery] int? garageId,
             [FromQuery] string? brand,
-            [FromQuery] string? model, 
-            [FromQuery] string? color)
+            [FromQuery] string? model,
+            [FromQuery] string? color,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
             try
             {
@@ -73,17 +108,25 @@ namespace AngularWithASP.Server.Controllers
                     query = query.Where(c => c.Color.Contains(color));
                 }
 
-                if (query.Count() == 0)
+                var totalItems = await query.CountAsync();
+                if (totalItems == 0)
                 {
                     return NoContent();
                 }
 
-                return await query.ToListAsync();
+                var cars = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                Response.Headers.Add("X-Total-Count", totalItems.ToString());
+
+                return Ok(cars);
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, exc.GetFullStack());
-                return StatusCode(500, "An internal error occured, please inform administrator");
+                return StatusCode(500, "An internal error occurred, please inform administrator");
             }
         }
 
@@ -159,6 +202,59 @@ namespace AngularWithASP.Server.Controllers
             }
             
         }
+
+        /// <summary>
+        /// Updates a car based on its ID.
+        /// </summary>
+        /// <param name="id">The ID of the car to update.</param>
+        /// <param name="car">The car data to update.</param>
+        /// <returns>The updated car.</returns>
+        [HttpPut("{id}")]
+        [SwaggerOperation(
+            Summary = "Updates a car based on its ID.",
+            Description = "Returns the updated car."
+        )]
+        [SwaggerResponse(200, "The updated car.", typeof(Car))]
+        [SwaggerResponse(400, "Invalid car data.")]
+        [SwaggerResponse(404, "The car was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<IActionResult> UpdateCar(int id, [FromBody] Car car)
+        {
+            if (id != car.Id)
+            {
+                return BadRequest("Car ID mismatch.");
+            }
+
+            if (car == null)
+            {
+                return BadRequest("Invalid car data.");
+            }
+
+            try
+            {
+                var existingCar = await _context.Cars.FindAsync(id);
+                if (existingCar == null)
+                {
+                    return NotFound();
+                }
+
+                existingCar.Brand = car.Brand;
+                existingCar.Model = car.Model;
+                existingCar.Color = car.Color;
+                existingCar.GarageId = car.GarageId;
+
+                _context.Entry(existingCar).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                return Ok(existingCar);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
+        }
+
 
         /// <summary>
         /// Assigns a car to a garage.
