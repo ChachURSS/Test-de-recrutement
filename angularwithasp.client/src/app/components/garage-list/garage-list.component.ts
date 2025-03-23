@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { GarageService } from '../../services/garage.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Garage } from '../../models/garage.model';
 
 @Component({
   selector: 'app-garage-list',
@@ -8,27 +8,22 @@ import { FormBuilder, FormGroup } from '@angular/forms';
   styleUrls: ['./garage-list.component.scss']
 })
 export class GarageListComponent implements OnInit {
-  garages: any[] = [];
-  garageForm: FormGroup;
+  garages: Garage[] = [];
 
-  constructor(private garageService: GarageService, private fb: FormBuilder) {
-    this.garageForm = this.fb.group({
-      name: ['']
-    });
-  }
+  constructor(private garageService: GarageService) { }
 
   ngOnInit(): void {
     this.loadGarages();
   }
 
   loadGarages(): void {
-    this.garageService.getGarages().subscribe(data => {
-      this.garages = data;
+    this.garageService.getGarages().subscribe(garages => {
+      this.garages = garages;
     });
   }
 
-  addGarage(): void {
-    this.garageService.addGarage(this.garageForm.value).subscribe(() => {
+  deleteGarage(id: number): void {
+    this.garageService.deleteGarage(id).subscribe(() => {
       this.loadGarages();
     });
   }

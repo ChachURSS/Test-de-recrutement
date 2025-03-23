@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CarService } from '../../services/car.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Car } from '../../models/car.model';
 
 @Component({
   selector: 'app-car-list',
@@ -8,28 +8,22 @@ import { FormBuilder, FormGroup } from '@angular/forms';
   styleUrls: ['./car-list.component.scss']
 })
 export class CarListComponent implements OnInit {
-  cars: any[] = [];
-  carForm: FormGroup;
+  cars: Car[] = [];
 
-  constructor(private carService: CarService, private fb: FormBuilder) {
-    this.carForm = this.fb.group({
-      model: [''],
-      garageId: ['']
-    });
-  }
+  constructor(private carService: CarService) { }
 
   ngOnInit(): void {
     this.loadCars();
   }
 
   loadCars(): void {
-    this.carService.getCars().subscribe(data => {
-      this.cars = data;
+    this.carService.getCars().subscribe(cars => {
+      this.cars = cars;
     });
   }
 
-  addCar(): void {
-    this.carService.addCar(this.carForm.value).subscribe(() => {
+  deleteCar(id: number): void {
+    this.carService.deleteCar(id).subscribe(() => {
       this.loadCars();
     });
   }
