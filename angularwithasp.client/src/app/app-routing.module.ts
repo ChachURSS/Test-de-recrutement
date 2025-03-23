@@ -12,6 +12,7 @@ const routes: Routes = [
   { path: 'garages', component: GarageListComponent },
   { path: 'car-edit', component: CarEditorComponent },
   { path: 'car-edit/:carId', component: CarEditorComponent },
+  { path: 'car-editgarage/:garageId', component: CarEditorComponent },
   { path: 'garage-edit', component: GarageEditorComponent },
   { path: 'garage-edit/:garageId', component: GarageEditorComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }

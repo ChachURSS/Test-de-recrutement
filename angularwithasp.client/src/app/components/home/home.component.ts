@@ -33,6 +33,6 @@ export class HomeComponent implements OnInit {
     }
 
     redirectToNewCarScreen() {
-        this.router.navigate(['/car-edit']);
+        this.router.navigate(['/car-editgarage/', this.selectedGarage?.id]);
     }
 }
