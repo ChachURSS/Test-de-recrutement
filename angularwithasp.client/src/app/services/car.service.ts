@@ -1,30 +1,33 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Car } from '../models/car.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class CarService {
-  private apiUrl = 'https://api.example.com/cars';
+  private apiUrl = 'https://localhost:5001/api/cars';
 
   constructor(private http: HttpClient) { }
 
-  getCars(): Observable<any> {
-    return this.http.get(this.apiUrl);
+  getCars(): Observable<Car[]> {
+    return this.http.get<Car[]>(this.apiUrl);
   }
 
-  addCar(car: any): Observable<any> {
-    return this.http.post(this.apiUrl, car);
+  getCar(id: number): Observable<Car> {
+    return this.http.get<Car>(`${this.apiUrl}/${id}`);
   }
 
-  deleteCar(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  createCar(car: Car): Observable<Car> {
+    return this.http.post<Car>(this.apiUrl, car);
   }
 
-  assignCarToGarage(carId: number, garageId: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${carId}/assign/${garageId}`, {});
+  updateCar(id: number, car: Car): Observable<Car> {
+    return this.http.put<Car>(`${this.apiUrl}/${id}`, car);
   }
 
-  removeCarFromGarage(carId: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${carId}/remove`, {});
+  deleteCar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
