@@ -3,6 +3,7 @@ using AngularWithASP.Server.Data;
 using Serilog;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
+using AngularWithASP.Server.DataAccess;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -16,9 +17,22 @@ try
     var configuration = builder.Configuration;
     var services = builder.Services;
 
-    //Add support to logging with SERILOG
+    // Add support to logging with SERILOG
     builder.Host.UseSerilog((context, configuration) =>
         configuration.ReadFrom.Configuration(context.Configuration));
+
+    // Add CORS services
+    builder.Services.AddCors(options =>
+    {
+
+        // only for dev, on production, add cors to allowed only frontend origin
+        options.AddPolicy("AllowAll", builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+    });
 
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
@@ -26,11 +40,10 @@ try
     if (builder.Environment.IsDevelopment())
     {
         builder.Services.AddSwaggerGen(
-            c=>
+            c =>
             {
                 c.EnableAnnotations();
             });
-
     }
 
     if (configuration["DB_PROVIDER"] == "SQLite")
@@ -44,9 +57,12 @@ try
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
     }
 
+    builder.Services.AddScoped<IGarageRepository, GarageRepository>();
+    builder.Services.AddScoped<ICarRepository, CarRepository>();
+
     var app = builder.Build();
 
-    //Add support to logging request with SERILOG
+    // Add support to logging request with SERILOG
     app.UseSerilogRequestLogging();
 
     if (app.Environment.IsDevelopment())
@@ -54,6 +70,9 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Use CORS policy
+    app.UseCors("AllowAll");
 
     app.UseHttpsRedirection();
     app.UseAuthorization();
@@ -66,7 +85,6 @@ try
     }
 
     app.Run();
-
 }
 catch (Exception ex)
 {
@@ -76,4 +94,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-

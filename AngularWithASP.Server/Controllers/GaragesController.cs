@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using AngularWithASP.Server.Data;
 using AngularWithASP.Server.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using AngularWithASP.Server.DataAccess;
 
 namespace AngularWithASP.Server.Controllers
 {
@@ -13,19 +14,21 @@ namespace AngularWithASP.Server.Controllers
     [ApiController]
     public class GaragesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IGarageRepository _garageRepository;
         private readonly ILogger<GaragesController> _logger;
 
         /// <summary>
         /// Constructor for the <see cref="GaragesController"/> class.
         /// </summary>
-        /// <param name="context">Data context</param>
+        /// <param name="garageRepository">Garage repository</param>
         /// <param name="logger">Logger object</param>
-        public GaragesController(AppDbContext context, ILogger<GaragesController> logger)
+        public GaragesController(IGarageRepository garageRepository, ILogger<GaragesController> logger)
         {
-            _context = context;
+            _garageRepository = garageRepository;
             _logger = logger;
         }
+
+
 
         /// <summary>
         /// Retrieves the list of all garages, optionally filtered by name.
@@ -45,19 +48,14 @@ namespace AngularWithASP.Server.Controllers
         {
             try
             {
-                var query = _context.Garages.Include(g => g.Cars).AsQueryable();
+                var garages = await _garageRepository.GetGarages(name);
 
-                if (!string.IsNullOrEmpty(name))
-                {
-                    query = query.Where(g => g.Name.Contains(name));
-                }
-
-                if (query.Count() == 0)
+                if (!garages.Any())
                 {
                     return NoContent();
                 }
 
-                return await query.ToListAsync();
+                return Ok(garages);
             }
             catch (Exception exc)
             {
@@ -94,9 +92,8 @@ namespace AngularWithASP.Server.Controllers
                     return BadRequest("Name is required.");
                 }
 
-                _context.Garages.Add(garage);
-                await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetGarages), new { id = garage.Id }, garage);
+                var createdGarage = await _garageRepository.AddGarage(garage);
+                return CreatedAtAction(nameof(GetGarages), new { id = createdGarage.Id }, createdGarage);
             }
             catch (Exception exc)
             {
@@ -123,20 +120,99 @@ namespace AngularWithASP.Server.Controllers
         {
             try
             {
-                var garage = await _context.Garages.FindAsync(id);
-                if (garage == null)
+                var deleted = await _garageRepository.DeleteGarage(id);
+                if (!deleted)
                 {
                     return NotFound();
                 }
 
-                _context.Garages.Remove(garage);
-                await _context.SaveChangesAsync();
                 return NoContent();
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, exc.GetFullStack());
                 return StatusCode(500, "An internal error occured, please inform administrator");
+            }
+        }
+
+        /// <summary>
+        /// Updates a garage based on its ID.
+        /// </summary>
+        /// <param name="id">The ID of the garage to update.</param>
+        /// <param name="garage">The garage data to update.</param>
+        /// <returns>The updated garage.</returns>
+        [HttpPut("{id}")]
+        [SwaggerOperation(
+            Summary = "Updates a garage based on its ID.",
+            Description = "Returns the updated garage."
+        )]
+        [SwaggerResponse(200, "The updated garage.", typeof(Garage))]
+        [SwaggerResponse(400, "Invalid garage data.")]
+        [SwaggerResponse(404, "The garage was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<IActionResult> UpdateGarage(int id, [FromBody] Garage garage)
+        {
+            if (id != garage.Id)
+            {
+                return BadRequest("Garage ID mismatch.");
+            }
+
+            if (garage == null)
+            {
+                return BadRequest("Invalid garage data.");
+            }
+
+            if (string.IsNullOrEmpty(garage.Name))
+            {
+                return BadRequest("Name is required.");
+            }
+
+            try
+            {
+                var updatedGarage = await _garageRepository.UpdateGarage(id, garage);
+                return Ok(updatedGarage);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
+            }
+        }
+        /// <summary>
+        /// Retrieves a garage by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the garage to retrieve.</param>
+        /// <returns>The garage with the specified ID.</returns>
+        [HttpGet("{id}")]
+        [SwaggerOperation(
+            Summary = "Retrieves a garage by its ID.",
+            Description = "Returns the garage with the specified ID."
+        )]
+        [SwaggerResponse(200, "The garage with the specified ID.", typeof(Garage))]
+        [SwaggerResponse(404, "The garage was not found.")]
+        [SwaggerResponse(500, "An internal error occurred while processing the request.")]
+        public async Task<ActionResult<Garage>> GetGarageById(
+            [SwaggerParameter("The ID of the garage to retrieve.")] int id)
+        {
+            try
+            {
+                var garage = await _garageRepository.GetGarageById(id);
+
+                if (garage == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(garage);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, exc.GetFullStack());
+                return StatusCode(500, "An internal error occurred, please inform administrator");
             }
         }
     }

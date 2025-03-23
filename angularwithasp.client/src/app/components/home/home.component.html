@@ -1,0 +1,50 @@
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-3 h-100 overflow-auto">
+            <div class="list-group">
+                <button *ngFor="let garage of garages" class="list-group-item list-group-item-action" (click)="selectGarage(garage.id)">
+                    <h5 class="mb-1">{{ garage.name }}</h5>
+                    <p class="mb-1">{{ garage.city }}</p>
+                </button>
+            </div>
+        </div>
+        <div class="col-9">
+            <div *ngIf="selectedGarage; else noGarageSelected">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ selectedGarage.name }}</h2>
+                        <p class="card-text">{{ selectedGarage.city }}</p>
+                        <button class="btn btn-primary" (click)="redirectToNewCarScreen()">Ajouter une voiture</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Marque</th>
+                                    <th>Modele</th>
+                                    <th>Couleur</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let car of selectedGarage.cars">
+                                    <td>{{ car.brand }}</td>
+                                    <td>{{ car.model }}</td>
+                                    <td>{{ car.color }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <ng-template #noGarageSelected>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text">Selectionner un garage dans la liste</p>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+</div>
